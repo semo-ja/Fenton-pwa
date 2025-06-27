@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fenton Growth Calculator</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#4a6fc1" />
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f2f6fc;
+      padding: 20px;
+      direction: ltr;
+    }
+    h1 {
+      color: #3a5ca4;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      font-size: 16px;
+      margin-top: 5px;
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      background-color: #4a6fc1;
+      color: white;
+      padding: 10px;
+      font-size: 18px;
+      border: none;
+      cursor: pointer;
+    }
+    .result {
+      margin-top: 20px;
+      background: #e2ecff;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .status-normal { color: green; }
+    .status-low { color: orange; }
+    .status-high { color: red; }
+  </style>
+</head>
+<body>
+
+<h1>Fenton Growth Calculator</h1>
+
+<label for="weight">Weight (kg):</label>
+<input type="number" id="weight" step="0.01">
+
+<label for="length">Length (cm):</label>
+<input type="number" id="length" step="0.1">
+
+<label for="head">Head Circumference (cm):</label>
+<input type="number" id="head" step="0.1">
+
+<label for="age">Gestational Age (weeks):</label>
+<input type="number" id="age" min="22" max="50">
+
+<button onclick="calculate()">Calculate</button>
+
+<div class="result" id="resultBox" style="display: none;">
+  <p><strong>Results:</strong></p>
+  <div id="resultText">Loading...</div>
+</div>
+
+<script>
+  const fenton = {
+    34: { W_M: 2.04, W_S: 0.102, L_M: 38.9, L_S: 0.041, HC_M: 28.9, HC_S: 0.046 },
+    35: { W_M: 2.16, W_S: 0.103, L_M: 39.6, L_S: 0.0415, HC_M: 29.4, HC_S: 0.0465 },
+    36: { W_M: 2.28, W_S: 0.104, L_M: 40.3, L_S: 0.042, HC_M: 30.0, HC_S: 0.047 },
+    37: { W_M: 2.4, W_S: 0.105, L_M: 41.0, L_S: 0.0425, HC_M: 30.6, HC_S: 0.0475 },
+    38: { W_M: 2.52, W_S: 0.106, L_M: 41.7, L_S: 0.043, HC_M: 31.1, HC_S: 0.048 },
+    39: { W_M: 2.64, W_S: 0.107, L_M: 42.4, L_S: 0.0435, HC_M: 31.7, HC_S: 0.0485 },
+    40: { W_M: 2.76, W_S: 0.108, L_M: 43.1, L_S: 0.044, HC_M: 32.2, HC_S: 0.049 }
+  };
+
+  function zScore(X, M, S) {
+    return ((X - M) / S);
+  }
+
+  function percentileFromZ(z) {
+    const p = 0.3275911;
+    const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741,
+          a4 = -1.453152027, a5 = 1.061405429;
+    const sign = z < 0 ? -1 : 1;
+    const x = Math.abs(z)/Math.sqrt(2);
+    const t = 1.0/(1.0 + p*x);
+    const y = 1.0 - (((((a5*t + a4)*t + a3)*t + a2)*t + a1)*t*Math.exp(-x*x));
+    return Math.round((0.5*(1 + sign*y)) * 1000)/10;
+  }
+
+  function getStatus(pct) {
+    if (pct < 10) return "Low";
+    if (pct > 90) return "High";
+    return "Normal";
+  }
+
+  function calculate() {
+    const w = parseFloat(document.getElementById('weight').value);
+    const l = parseFloat(document.getElementById('length').value);
+    const hc = parseFloat(document.getElementById('head').value);
+    const age = parseInt(document.getElementById('age').value);
+
+    const d = fenton[age];
+    if (!d || !w || !l || !hc) {
+      document.getElementById('resultText').innerHTML = "Please enter valid values and GA between 34-40 weeks.";
+      document.getElementById('resultBox').style.display = "block";
+      return;
+    }
+
+    const wz = zScore(w, d.W_M, d.W_S);
+    const lz = zScore(l, d.L_M, d.L_S);
+    const hcz = zScore(hc, d.HC_M, d.HC_S);
+
+    const wp = percentileFromZ(wz);
+    const lp = percentileFromZ(lz);
+    const hcp = percentileFromZ(hcz);
+
+    const result = `
+    <p><strong>Weight:</strong> Z = ${wz.toFixed(2)} | Percentile = ${wp}% | <span class="status-${getStatus(wp).toLowerCase()}">${getStatus(wp)}</span></p>
+    <p><strong>Length:</strong> Z = ${lz.toFixed(2)} | Percentile = ${lp}% | <span class="status-${getStatus(lp).toLowerCase()}">${getStatus(lp)}</span></p>
+    <p><strong>Head Circumference:</strong> Z = ${hcz.toFixed(2)} | Percentile = ${hcp}% | <span class="status-${getStatus(hcp).toLowerCase()}">${getStatus(hcp)}</span></p>
+    `;
+
+    document.getElementById('resultText').innerHTML = result;
+    document.getElementById('resultBox').style.display = "block";
+  }
+</script>
+
+</body>
+</html>
+
+.5 * (1 + sign * y) * 100);
+  }
+
+  function status(p) {
+    if (p < 10) return '<span class="status-low">Low</span>';
+    if (p > 90) return '<span class="status-high">High</span>';
+    return '<span class="status-normal">Normal</span>';
+  }
+
+  function calculate() {
+    const weight = parseFloat(document.getElementById("weight").value);
+    const length = parseFloat(document.getElementById("length").value);
+    const head = parseFloat(document.getElementById("head").value);
+    const age = parseInt(document.getElementById("age").value);
+
+    const data = fenton[age];
+    if (!data) {
+      document.getElementById("resultText").innerHTML = "Invalid gestational age.";
+      document.getElementById("resultBox").style.display = "block";
+      return;
+    }
+
+    const wz = zScore(weight, data.W_M, data.W_S).toFixed(2);
+    const lz = zScore(length, data.L_M, data.L_S).toFixed(2);
+    const hcz = zScore(head, data.HC_M, data.HC_S).toFixed(2);
+
+    const wp = percentileFromZ(wz).toFixed(1);
+    const lp = percentileFromZ(lz).toFixed(1);
+    const hcp = percentileFromZ(hcz).toFixed(1);
+
+    const result = `
+      <strong>Weight</strong><br>
+      Z-Score: ${wz}, Percentile: ${wp}%<br>
+      Status: ${status(wp)}<br><br>
+      <strong>Length</strong><br>
+      Z-Score: ${lz}, Percentile: ${lp}%<br>
+      Status: ${status(lp)}<br><br>
+      <strong>Head Circumference</strong><br>
+      Z-Score: ${hcz}, Percentile: ${hcp}%<br>
+      Status: ${status(hcp)}
+    `;
+
+    document.getElementById("resultText").innerHTML = result;
+    document.getElementById("resultBox").style.display = "block";
+  }
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(reg => console.log("✅ Service Worker registered"))
+      .catch(err => console.error("❌ SW registration failed:", err));
+  }
+</script>
+</body>
+</html>
